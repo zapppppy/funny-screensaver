@@ -16,6 +16,7 @@
       display: block;
       width: 100vw;
       height: 100vh;
+      outline: none;
     }
   </style>
 </head>
@@ -25,6 +26,10 @@
 <script>
   const canvas = document.getElementById('screensaver');
   const ctx = canvas.getContext('2d');
+
+  // Make sure something is focusable so key events are reliable
+  canvas.setAttribute('tabindex', '0');
+  canvas.focus();
 
   let dpr = window.devicePixelRatio || 1;
 
@@ -48,8 +53,8 @@
     h: 140,
     x: 100,
     y: 100,
-    vx: 100, // px/sec (2x slower than before)
-    vy: 80   // px/sec (2x slower than before)
+    vx: 100, // px/sec (2x slower)
+    vy: 80   // px/sec (2x slower)
   };
 
   let lastTime = null;
@@ -111,15 +116,54 @@
 
   requestAnimationFrame(step);
 
+  // Fullscreen helpers (cross-browser-ish)
+  function enterFullscreen() {
+    const elem = document.documentElement;
+    if (elem.requestFullscreen) return elem.requestFullscreen();
+    if (elem.webkitRequestFullscreen) return elem.webkitRequestFullscreen();
+    if (elem.mozRequestFullScreen) return elem.mozRequestFullScreen();
+    if (elem.msRequestFullscreen) return elem.msRequestFullscreen();
+  }
+
+  function exitFullscreen() {
+    if (document.exitFullscreen) return document.exitFullscreen();
+    if (document.webkitExitFullscreen) return document.webkitExitFullscreen();
+    if (document.mozCancelFullScreen) return document.mozCancelFullScreen();
+    if (document.msExitFullscreen) return document.msExitFullscreen();
+  }
+
+  function isFullscreen() {
+    return (
+      document.fullscreenElement ||
+      document.webkitFullscreenElement ||
+      document.mozFullScreenElement ||
+      document.msFullscreenElement
+    );
+  }
+
+  // Keep canvas size correct when fullscreen changes
+  document.addEventListener('fullscreenchange', resize);
+  document.addEventListener('webkitfullscreenchange', resize);
+  document.addEventListener('mozfullscreenchange', resize);
+  document.addEventListener('MSFullscreenChange', resize);
+
   // Press "f" to toggle fullscreen
   window.addEventListener('keydown', (e) => {
-    if (e.key && e.key.toLowerCase() === 'f') {
-      if (!document.fullscreenElement) {
-        document.documentElement.requestFullscreen().catch(() => {});
+    if (!e.key) return;
+    const key = e.key.toLowerCase();
+    if (key === 'f') {
+      e.preventDefault();
+      if (!isFullscreen()) {
+        enterFullscreen()?.catch?.(() => {});
       } else {
-        document.exitFullscreen().catch(() => {});
+        exitFullscreen()?.catch?.(() => {});
       }
     }
+  });
+
+  // If focus is lost (e.g. clicking), re-focus canvas so keys still hit
+  document.addEventListener('click', () => {
+    canvas.focus();
   });
 </script>
 </body>
