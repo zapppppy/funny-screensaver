@@ -48,8 +48,8 @@
     h: 140,
     x: 100,
     y: 100,
-    vx: 200, // px/sec
-    vy: 160  // px/sec
+    vx: 100, // px/sec (2x slower than before)
+    vy: 80   // px/sec (2x slower than before)
   };
 
   let lastTime = null;
@@ -110,6 +110,17 @@
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
   requestAnimationFrame(step);
+
+  // Press "f" to toggle fullscreen
+  window.addEventListener('keydown', (e) => {
+    if (e.key && e.key.toLowerCase() === 'f') {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      } else {
+        document.exitFullscreen().catch(() => {});
+      }
+    }
+  });
 </script>
 </body>
 </html>
